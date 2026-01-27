@@ -19,7 +19,7 @@ cd belajar-go
 ## 3. Build Aplikasi
 Build aplikasi menjadi file binary agar dapat dijalankan tanpa source code:
 ```bash
-go build -o category-api main.go
+go build -o pos-api main.go
 ```
 
 ## 4. Konfigurasi Systemd (Rekomendasi)
@@ -27,7 +27,7 @@ Agar aplikasi tetap berjalan di background dan otomatis restart jika server rebo
 
 Buat file service baru:
 ```bash
-sudo nano /etc/systemd/system/category-api.service
+sudo nano /etc/systemd/system/pos-api.service
 ```
 
 Masukkan konfigurasi berikut (sesuaikan `User` dan `WorkingDirectory`):
@@ -40,7 +40,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/root/belajar-go
-ExecStart=/root/belajar-go/category-api
+ExecStart=/root/belajar-go/pos-api
 Restart=always
 RestartSec=5
 
@@ -52,14 +52,14 @@ WantedBy=multi-user.target
 Aktifkan dan jalankan service yang baru dibuat:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable category-api
-sudo systemctl start category-api
+sudo systemctl enable pos-api
+sudo systemctl start pos-api
 ```
 
 ## 6. Verifikasi
 Cek status service:
 ```bash
-sudo systemctl status category-api
+sudo systemctl status pos-api
 ```
 
 Aplikasi sekarang berjalan di `http://IP_VPS_ANDA:8080`.
@@ -71,12 +71,12 @@ Jika Anda lebih suka menggunakan container, Anda dapat menggunakan Docker.
 
 ### Build Image
 ```bash
-docker build -t category-api .
+docker build -t pos-api .
 ```
 
 ### Jalankan Container
 ```bash
-docker run -d -p 8080:8080 --name category-api-container category-api
+docker run -d -p 8080:8080 --name pos-api-container pos-api
 ```
 
 ### Cek Status Container

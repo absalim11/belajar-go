@@ -55,6 +55,9 @@ func main() {
 	mux.HandleFunc("PUT /products/{id}", updateProduct)
 	mux.HandleFunc("DELETE /products/{id}", deleteProduct)
 
+	// Health Check Route
+	mux.HandleFunc("GET /health", healthCheck)
+
 	port := ":8080"
 	fmt.Printf("Server starting on http://localhost%s\n", port)
 	if err := http.ListenAndServe(port, mux); err != nil {
@@ -274,4 +277,13 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "Product not found", http.StatusNotFound)
+}
+
+// --- Health Check Handler ---
+
+// GET /health
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "OK", "message": "Server is running smoothly"})
 }

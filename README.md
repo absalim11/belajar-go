@@ -1,4 +1,4 @@
-# Proyek API Kategori Go
+# Proyek Go POS API
 
 ## Ikhtisar
 Proyek ini adalah latihan pembelajaran untuk membangun API RESTful menggunakan bahasa pemrograman Go. Fokus utamanya adalah menggunakan standar library Go tanpa dependensi eksternal untuk memahami mekanisme inti dari HTTP server, routing, dan penanganan data di Go.
@@ -6,6 +6,8 @@ Proyek ini adalah latihan pembelajaran untuk membangun API RESTful menggunakan b
 ## Struktur Proyek
 - `main.go`: Berisi seluruh logika aplikasi, termasuk model, penyimpanan, dan handler HTTP.
 - `go.mod`: Definisi modul Go.
+- `DEPLOYMENT.md`: Panduan instalasi dan deployment ke VPS.
+- `Dockerfile`: Konfigurasi container Docker.
 
 ---
 
@@ -25,6 +27,29 @@ Pada tugas ini, kita telah mengimplementasikan API CRUD (Create, Read, Update, D
 | `GET` | `/categories/{id}` | Mendapatkan detail kategori berdasarkan ID |
 | `PUT` | `/categories/{id}` | Memperbarui kategori berdasarkan ID |
 | `DELETE` | `/categories/{id}` | Menghapus kategori berdasarkan ID |
+
+---
+
+## Tugas 2: API Produk (CRUD)
+Pada tugas ini, kita mengimplementasikan API CRUD untuk entitas "Product" dengan data awal.
+
+### Endpoint Produk
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/products` | Menampilkan semua produk |
+| `POST` | `/products` | Membuat produk baru |
+| `GET` | `/products/{id}` | Mendapatkan detail produk berdasarkan ID |
+| `PUT` | `/products/{id}` | Memperbarui produk berdasarkan ID |
+| `DELETE` | `/products/{id}` | Menghapus produk berdasarkan ID |
+
+---
+
+## Tugas Tambahan: Health Check
+Endpoint untuk mengecek apakah server berjalan dengan baik.
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/health` | Mengecek status server |
 
 ### Cara Menjalankan
 1. Pastikan Anda telah menginstal Go (versi 1.22 atau lebih tinggi direkomendasikan).

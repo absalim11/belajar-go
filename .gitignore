@@ -19,3 +19,11 @@
 .vscode/
 *.swp
 *.swo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Docker volumes
+postgres_data/

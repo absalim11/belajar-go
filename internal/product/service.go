@@ -1,7 +1,7 @@
 package product
 
 type Service interface {
-	GetAll() ([]ProductDetail, error)
+	GetAll(nameFilter string) ([]ProductDetail, error)
 	GetByID(id int) (*ProductDetail, error)
 	Create(req CreateProductRequest) (*Product, error)
 	Update(id int, req UpdateProductRequest) (*Product, error)
@@ -16,8 +16,8 @@ func NewService(repo Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) GetAll() ([]ProductDetail, error) {
-	return s.repo.GetAll()
+func (s *service) GetAll(nameFilter string) ([]ProductDetail, error) {
+	return s.repo.GetAll(nameFilter)
 }
 
 func (s *service) GetByID(id int) (*ProductDetail, error) {

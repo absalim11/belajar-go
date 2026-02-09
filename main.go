@@ -3,6 +3,7 @@ package main
 import (
 	"belajar-go/internal/category"
 	"belajar-go/internal/product"
+	"belajar-go/internal/transaction"
 	"belajar-go/pkg/database"
 	"encoding/json"
 	"fmt"
@@ -38,6 +39,11 @@ func main() {
 	productService := product.NewService(productRepo)
 	productHandler := product.NewHandler(productService)
 
+	// Initialize Transaction dependencies
+	transactionRepo := transaction.NewRepository(db)
+	transactionService := transaction.NewService(transactionRepo)
+	transactionHandler := transaction.NewHandler(transactionService)
+
 	// Setup router
 	mux := http.NewServeMux()
 
@@ -54,6 +60,12 @@ func main() {
 	mux.HandleFunc("GET /products/{id}", productHandler.GetByID)
 	mux.HandleFunc("PUT /products/{id}", productHandler.Update)
 	mux.HandleFunc("DELETE /products/{id}", productHandler.Delete)
+
+	// Transaction Routes
+	mux.HandleFunc("POST /api/checkout", transactionHandler.Checkout)
+
+	// Report Routes
+	mux.HandleFunc("GET /api/report/hari-ini", transactionHandler.GetDailySalesReport)
 
 	// Health Check Route
 	mux.HandleFunc("GET /health", healthCheck)

@@ -10,6 +10,7 @@ Proyek ini adalah latihan pembelajaran untuk membangun API RESTful menggunakan b
 - `internal/`: Package internal untuk business logic
   - `category/`: Module untuk kategori (entity, handler, service, repository)
   - `product/`: Module untuk produk (entity, handler, service, repository)
+  - `transaction/`: Module untuk transaksi dan checkout (entity, handler, service, repository) ⭐ NEW
 - `pkg/`: Package yang bisa digunakan ulang
   - `database/`: Database connection configuration
   - `response/`: Standard API response format
@@ -18,12 +19,13 @@ Proyek ini adalah latihan pembelajaran untuk membangun API RESTful menggunakan b
 - `QUICK_START.md`: Panduan cepat untuk memulai
 - `DATABASE.md`: Dokumentasi lengkap database schema dan commands
 - `DEPLOYMENT.md`: Panduan instalasi dan deployment ke VPS
+- `BOOTCAMP_SESSION_3.md`: Dokumentasi implementasi Session 3 (Search, Transaction, Report) ⭐ NEW
 - `Dockerfile`: Konfigurasi container Docker
 - `docker-compose.yml`: Konfigurasi Docker Compose untuk PostgreSQL
 - `init.sql`: Script inisialisasi database (tabel, index, data awal)
 - `.env`: File konfigurasi environment variables (jangan di-commit ke git)
 - `.env.example`: Template file environment variables
-- `POS_API_Collection.postman_collection.json`: Postman collection untuk testing API
+- `POS_API_Collection.postman_collection.json`: Postman collection untuk testing API (Updated with Session 3)
 
 ---
 
@@ -53,6 +55,7 @@ Pada tugas ini, kita mengimplementasikan API CRUD untuk entitas "Product" dengan
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
 | `GET` | `/products` | Menampilkan semua produk |
+| `GET` | `/products?name={keyword}` | Mencari produk berdasarkan nama (case-insensitive) ⭐ NEW |
 | `POST` | `/products` | Membuat produk baru |
 | `GET` | `/products/{id}` | Mendapatkan detail produk berdasarkan ID |
 | `PUT` | `/products/{id}` | Memperbarui produk berdasarkan ID |
@@ -60,7 +63,27 @@ Pada tugas ini, kita mengimplementasikan API CRUD untuk entitas "Product" dengan
 
 ---
 
-## Tugas Tambahan: Health Check
+## Tugas 3: Sistem Transaksi & Reporting
+
+### Fitur Baru
+- **Search by Name**: Pencarian produk dengan filter nama (ILIKE)
+- **Transaction System**: Checkout dengan database transaction untuk atomicity
+- **Stock Management**: Automatic stock reduction & validation
+- **Sales Report**: Laporan penjualan harian dengan produk terlaris
+
+### Endpoint Transaksi
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `POST` | `/api/checkout` | Checkout transaksi dengan multiple items |
+
+### Endpoint Report
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/report/hari-ini` | Laporan penjualan hari ini (revenue, transaksi, produk terlaris) |
+
+---
+
+## Health Check
 Endpoint untuk mengecek apakah server berjalan dengan baik.
 
 | Method | Endpoint | Deskripsi |
@@ -174,6 +197,18 @@ Database `belajar_go` memiliki tabel:
   - created_at
   - updated_at
 
+- **transactions**: Menyimpan data transaksi checkout ⭐ NEW
+  - id (PRIMARY KEY)
+  - total_amount
+  - created_at
+
+- **transaction_details**: Menyimpan detail item per transaksi ⭐ NEW
+  - id (PRIMARY KEY)
+  - transaction_id (FOREIGN KEY ke transactions)
+  - product_id (FOREIGN KEY ke products)
+  - quantity
+  - subtotal
+
 Data awal akan otomatis dibuat melalui file `init.sql`.
 
 **Untuk informasi lebih detail tentang database, lihat [DATABASE.md](DATABASE.md)**
@@ -275,6 +310,93 @@ curl -X PUT -H "Content-Type: application/json" \
 **Menghapus Produk:**
 ```bash
 curl -X DELETE http://localhost:8080/products/1
+```
+
+---
+
+### Contoh Penggunaan (Session 3 - Search, Transaction, Report) ⭐ NEW
+
+**Search Produk by Name:**
+```bash
+# Search dengan keyword "indo"
+curl "http://localhost:8080/products?name=indo"
+
+# Search dengan keyword "vit"
+curl "http://localhost:8080/products?name=vit"
+```
+
+**Checkout Transaksi - Single Item:**
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": 1, "quantity": 2}
+    ]
+  }' \
+  http://localhost:8080/api/checkout
+```
+
+**Checkout Transaksi - Multiple Items:**
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": 1, "quantity": 2},
+      {"product_id": 2, "quantity": 3},
+      {"product_id": 3, "quantity": 1}
+    ]
+  }' \
+  http://localhost:8080/api/checkout
+```
+
+**Daily Sales Report:**
+```bash
+curl http://localhost:8080/api/report/hari-ini
+```
+
+**Response Example (Checkout):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "total_amount": 16000,
+    "created_at": "2026-02-09T06:03:53.412228Z",
+    "details": [
+      {
+        "id": 1,
+        "transaction_id": 1,
+        "product_id": 1,
+        "product_name": "Indomie Godog",
+        "quantity": 2,
+        "subtotal": 7000
+      },
+      {
+        "id": 2,
+        "transaction_id": 1,
+        "product_id": 2,
+        "product_name": "Vit 1000ml",
+        "quantity": 3,
+        "subtotal": 9000
+      }
+    ]
+  }
+}
+```
+
+**Response Example (Daily Report):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_revenue": 45500,
+    "total_transaksi": 2,
+    "produk_terlaris": {
+      "nama": "Indomie Godog",
+      "qty_terjual": 7
+    }
+  }
+}
 ```
 
 ---

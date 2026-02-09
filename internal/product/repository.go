@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	GetAll() ([]ProductDetail, error)
+	GetAll(nameFilter string) ([]ProductDetail, error)
 	GetByID(id int) (*ProductDetail, error)
 	Create(req CreateProductRequest) (*Product, error)
 	Update(id int, req UpdateProductRequest) (*Product, error)
@@ -21,7 +21,7 @@ func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) GetAll() ([]ProductDetail, error) {
+func (r *repository) GetAll(nameFilter string) ([]ProductDetail, error) {
 	query := `
 		SELECT
 			p.id,
@@ -33,11 +33,18 @@ func (r *repository) GetAll() ([]ProductDetail, error) {
 			p.created_at,
 			p.updated_at
 		FROM products p
-		LEFT JOIN categories c ON p.category_id = c.id
-		ORDER BY p.id ASC
-	`
+		LEFT JOIN categories c ON p.category_id = c.id`
 
-	rows, err := r.db.Query(query)
+	args := []interface{}{}
+
+	if nameFilter != "" {
+		query += " WHERE p.nama ILIKE $1"
+		args = append(args, "%"+nameFilter+"%")
+	}
+
+	query += " ORDER BY p.id ASC"
+
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

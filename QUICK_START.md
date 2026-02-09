@@ -42,6 +42,11 @@ curl http://localhost:8080/health
 curl http://localhost:8080/products
 ```
 
+### Search Products by Name ⭐ NEW
+```bash
+curl "http://localhost:8080/products?name=indo"
+```
+
 ### Get All Categories
 ```bash
 curl http://localhost:8080/categories
@@ -59,6 +64,23 @@ curl -X POST http://localhost:8080/products \
   }'
 ```
 
+### Checkout Transaction
+```bash
+curl -X POST http://localhost:8080/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": 1, "quantity": 2},
+      {"product_id": 2, "quantity": 3}
+    ]
+  }'
+```
+
+### Daily Sales Report
+```bash
+curl http://localhost:8080/api/report/hari-ini
+```
+
 ## Testing dengan Postman
 
 1. Buka Postman
@@ -68,23 +90,43 @@ curl -X POST http://localhost:8080/products \
 
 ## Endpoint Summary
 
+### Health Check
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/health` | Health check |
+
+### Categories
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/categories` | List semua kategori |
 | GET | `/categories/{id}` | Detail kategori |
 | POST | `/categories` | Buat kategori baru |
 | PUT | `/categories/{id}` | Update kategori |
 | DELETE | `/categories/{id}` | Hapus kategori |
+
+### Products
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/products` | List semua produk |
+| GET | `/products?name={keyword}` | Search produk by name ⭐ NEW |
 | GET | `/products/{id}` | Detail produk |
 | POST | `/products` | Buat produk baru |
 | PUT | `/products/{id}` | Update produk |
 | DELETE | `/products/{id}` | Hapus produk |
 
+### Transactions
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/checkout` | Checkout transaksi |
+
+### Reports
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/report/hari-ini` | Laporan penjualan hari ini |
+
 ## Troubleshooting
 
-### Port 8080 sudah digunakan
+### Jika Port 8080 sudah digunakan
 Ubah port di `.env`:
 ```env
 SERVER_PORT=8081
@@ -107,7 +149,7 @@ docker-compose up -d
 - **README.md** - Overview dan cara menjalankan
 - **DATABASE.md** - Dokumentasi database lengkap (schema, commands, troubleshooting)
 - **DEPLOYMENT.md** - Panduan deployment ke VPS
-- **POS_API_Collection.postman_collection.json** - Postman collection
+- **POS_API_Collection.postman_collection.json** - Postman collection (Updated with 20 endpoints)
 
 ## Stop Aplikasi
 

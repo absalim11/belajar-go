@@ -49,3 +49,27 @@ CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
 
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Create Transactions Table
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    total_amount INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Transaction Details Table
+CREATE TABLE IF NOT EXISTS transaction_details (
+    id SERIAL PRIMARY KEY,
+    transaction_id INT REFERENCES transactions(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    subtotal INT NOT NULL
+);
+
+-- Create Indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_transaction_details_transaction_id
+    ON transaction_details(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_transaction_details_product_id
+    ON transaction_details(product_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at
+    ON transactions(created_at);

@@ -87,6 +87,63 @@ LEFT JOIN categories c ON p.category_id = c.id;
   3 | Kecap          | 12000 |   20 |           3 | Bumbu
 ```
 
+### Table: transactions ⭐ NEW (Session 3)
+Menyimpan data transaksi checkout.
+
+| Column | Type | Constraint | Description |
+|--------|------|------------|-------------|
+| id | SERIAL | PRIMARY KEY | ID transaksi (auto increment) |
+| total_amount | INTEGER | NOT NULL | Total harga transaksi |
+| created_at | TIMESTAMP | DEFAULT NOW() | Waktu transaksi dibuat |
+
+**Indexes:**
+- `idx_transactions_created_at` pada kolom `created_at` untuk performa query report
+
+**Sample Data:**
+```sql
+SELECT * FROM transactions;
+
+ id | total_amount |         created_at
+----+--------------+----------------------------
+  1 |        16000 | 2026-02-09 06:03:53.412228
+  2 |        29500 | 2026-02-09 06:04:19.682909
+```
+
+### Table: transaction_details ⭐ NEW (Session 3)
+Menyimpan detail item per transaksi.
+
+| Column | Type | Constraint | Description |
+|--------|------|------------|-------------|
+| id | SERIAL | PRIMARY KEY | ID detail (auto increment) |
+| transaction_id | INTEGER | FK to transactions(id) | ID transaksi |
+| product_id | INTEGER | FK to products(id) | ID produk |
+| quantity | INTEGER | NOT NULL | Jumlah item dibeli |
+| subtotal | INTEGER | NOT NULL | Subtotal (harga × quantity) |
+
+**Foreign Keys:**
+- `transaction_id` references `transactions(id)` ON DELETE CASCADE
+  - Jika transaksi dihapus, detail akan ikut terhapus
+- `product_id` references `products(id)`
+  - Relasi ke produk yang dibeli
+
+**Indexes:**
+- `idx_transaction_details_transaction_id` untuk performa JOIN dengan transactions
+- `idx_transaction_details_product_id` untuk performa JOIN dengan products
+
+**Sample Data:**
+```sql
+SELECT td.*, p.nama as product_name
+FROM transaction_details td
+JOIN products p ON td.product_id = p.id;
+
+ id | transaction_id | product_id | quantity | subtotal |  product_name
+----+----------------+------------+----------+----------+----------------
+  1 |              1 |          1 |        2 |     7000 | Indomie Godog
+  2 |              1 |          2 |        3 |     9000 | Vit 1000ml
+  3 |              2 |          1 |        5 |    17500 | Indomie Godog
+  4 |              2 |          3 |        1 |    12000 | Kecap
+```
+
 ## Database Features
 
 ### Auto-Update Timestamp
@@ -214,6 +271,44 @@ LEFT JOIN categories c ON p.category_id = c.id
 ORDER BY p.id;
 ```
 
+**View transactions with details:** ⭐ NEW
+```sql
+SELECT
+    t.id as transaction_id,
+    t.total_amount,
+    t.created_at,
+    td.product_id,
+    p.nama as product_name,
+    td.quantity,
+    td.subtotal
+FROM transactions t
+JOIN transaction_details td ON t.id = td.transaction_id
+JOIN products p ON td.product_id = p.id
+ORDER BY t.id, td.id;
+```
+
+**Daily sales report:** ⭐ NEW
+```sql
+-- Total revenue and transaction count today
+SELECT
+    COALESCE(SUM(total_amount), 0) as total_revenue,
+    COUNT(*) as total_transaksi
+FROM transactions
+WHERE DATE(created_at) = CURRENT_DATE;
+
+-- Top selling product today
+SELECT
+    p.nama,
+    COALESCE(SUM(td.quantity), 0) as qty_terjual
+FROM transaction_details td
+JOIN transactions t ON td.transaction_id = t.id
+JOIN products p ON td.product_id = p.id
+WHERE DATE(t.created_at) = CURRENT_DATE
+GROUP BY p.id, p.nama
+ORDER BY qty_terjual DESC
+LIMIT 1;
+```
+
 ## Troubleshooting
 
 ### Port 5433 sudah digunakan
@@ -266,12 +361,44 @@ postgresql://postgres:postgres@localhost:5433/belajar_go?sslmode=disable
 
 File `init.sql` akan otomatis dijalankan saat container pertama kali dibuat.
 Script ini berisi:
-1. CREATE TABLE untuk categories dan products
-2. CREATE INDEX untuk performa
-3. INSERT sample data
+1. CREATE TABLE untuk categories, products, transactions, dan transaction_details ⭐ UPDATED
+2. CREATE INDEX untuk performa (termasuk index untuk transactions) ⭐ UPDATED
+3. INSERT sample data untuk categories dan products
 4. CREATE FUNCTION dan TRIGGER untuk auto-update timestamp
 
 Jika ingin update `init.sql`:
 1. Edit file `init.sql`
 2. Reset database: `docker-compose down -v`
 3. Start ulang: `docker-compose up -d`
+
+### Migration for Session 3 Tables
+
+Jika sudah memiliki database running dan ingin menambahkan table transactions:
+
+```bash
+docker exec -i belajar-go-postgres psql -U postgres -d belajar_go << 'EOF'
+-- Create Transactions Table
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    total_amount INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Transaction Details Table
+CREATE TABLE IF NOT EXISTS transaction_details (
+    id SERIAL PRIMARY KEY,
+    transaction_id INT REFERENCES transactions(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    subtotal INT NOT NULL
+);
+
+-- Create Indexes
+CREATE INDEX IF NOT EXISTS idx_transaction_details_transaction_id
+    ON transaction_details(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_transaction_details_product_id
+    ON transaction_details(product_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at
+    ON transactions(created_at);
+EOF
+```

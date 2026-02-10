@@ -10,7 +10,7 @@ Proyek ini adalah latihan pembelajaran untuk membangun API RESTful menggunakan b
 - `internal/`: Package internal untuk business logic
   - `category/`: Module untuk kategori (entity, handler, service, repository)
   - `product/`: Module untuk produk (entity, handler, service, repository)
-  - `transaction/`: Module untuk transaksi dan checkout (entity, handler, service, repository) ⭐ NEW
+  - `transaction/`: Module untuk transaksi dan checkout (entity, handler, service, repository)
 - `pkg/`: Package yang bisa digunakan ulang
   - `database/`: Database connection configuration
   - `response/`: Standard API response format
@@ -19,13 +19,12 @@ Proyek ini adalah latihan pembelajaran untuk membangun API RESTful menggunakan b
 - `QUICK_START.md`: Panduan cepat untuk memulai
 - `DATABASE.md`: Dokumentasi lengkap database schema dan commands
 - `DEPLOYMENT.md`: Panduan instalasi dan deployment ke VPS
-- `BOOTCAMP_SESSION_3.md`: Dokumentasi implementasi Session 3 (Search, Transaction, Report) ⭐ NEW
 - `Dockerfile`: Konfigurasi container Docker
 - `docker-compose.yml`: Konfigurasi Docker Compose untuk PostgreSQL
 - `init.sql`: Script inisialisasi database (tabel, index, data awal)
 - `.env`: File konfigurasi environment variables (jangan di-commit ke git)
 - `.env.example`: Template file environment variables
-- `POS_API_Collection.postman_collection.json`: Postman collection untuk testing API (Updated with Session 3)
+- `POS_API_Collection.postman_collection.json`: Postman collection untuk testing API
 
 ---
 
@@ -55,7 +54,7 @@ Pada tugas ini, kita mengimplementasikan API CRUD untuk entitas "Product" dengan
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
 | `GET` | `/products` | Menampilkan semua produk |
-| `GET` | `/products?name={keyword}` | Mencari produk berdasarkan nama (case-insensitive) ⭐ NEW |
+| `GET` | `/products?name={keyword}` | Mencari produk berdasarkan nama (case-insensitive) |
 | `POST` | `/products` | Membuat produk baru |
 | `GET` | `/products/{id}` | Mendapatkan detail produk berdasarkan ID |
 | `PUT` | `/products/{id}` | Memperbarui produk berdasarkan ID |
@@ -107,9 +106,11 @@ Endpoint untuk mengecek apakah server berjalan dengan baik.
 
    Perintah ini akan:
    - Membuat container PostgreSQL 16 Alpine
+   - Membuat container pgAdmin 4 untuk database management
    - Menjalankan script `init.sql` untuk membuat tabel dan data awal
-   - Expose port 5433 (mapped ke 5432 di container)
-   - Membuat volume persistent untuk data PostgreSQL
+   - Expose port 5433 untuk PostgreSQL (mapped ke 5432 di container)
+   - Expose port 5050 untuk pgAdmin
+   - Membuat volume persistent untuk data PostgreSQL dan pgAdmin
 
 2. **Cek Status Container**
    ```bash
@@ -120,9 +121,16 @@ Endpoint untuk mengecek apakah server berjalan dengan baik.
    ```
    Name                      Command                 State                        Ports
    belajar-go-postgres   docker-entrypoint.sh postgres   Up (healthy)   0.0.0.0:5433->5432/tcp
+   belajar-go-pgadmin    /entrypoint.sh                  Up             0.0.0.0:5050->80/tcp
    ```
 
-3. **Lihat Logs Database (Optional)**
+3. **Access pgAdmin (Database Management UI)**
+   - Buka browser: http://localhost:5050
+   - Login dengan:
+     - Email: `admin@example.com`
+     - Password: `admin123`
+
+4. **Lihat Logs Database (Optional)**
    ```bash
    docker-compose logs -f postgres
    ```
@@ -147,17 +155,17 @@ SERVER_PORT=8080
 
 ### Perintah Docker Compose Berguna
 
-**Stop Database:**
+**Stop Services:**
 ```bash
 docker-compose stop
 ```
 
-**Start Database:**
+**Start Services:**
 ```bash
 docker-compose start
 ```
 
-**Restart Database:**
+**Restart Services:**
 ```bash
 docker-compose restart
 ```
@@ -176,6 +184,39 @@ docker-compose down -v
 ```bash
 docker-compose down
 docker-compose up -d
+```
+
+**View Logs:**
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f postgres
+docker-compose logs -f pgadmin
+```
+
+**Access pgAdmin:**
+```bash
+# Open in browser
+http://localhost:5050
+
+# Default credentials (ubah di .env untuk production)
+Email: admin@example.com
+Password: admin123
+```
+
+**Manage pgAdmin:**
+```bash
+# Stop pgAdmin only
+docker-compose stop pgadmin
+
+# Restart pgAdmin
+docker-compose restart pgadmin
+
+# Remove pgAdmin (keep PostgreSQL)
+docker-compose stop pgadmin
+docker-compose rm pgadmin
 ```
 
 ### Struktur Database
@@ -197,12 +238,12 @@ Database `belajar_go` memiliki tabel:
   - created_at
   - updated_at
 
-- **transactions**: Menyimpan data transaksi checkout ⭐ NEW
+- **transactions**: Menyimpan data transaksi checkout
   - id (PRIMARY KEY)
   - total_amount
   - created_at
 
-- **transaction_details**: Menyimpan detail item per transaksi ⭐ NEW
+- **transaction_details**: Menyimpan detail item per transaksi
   - id (PRIMARY KEY)
   - transaction_id (FOREIGN KEY ke transactions)
   - product_id (FOREIGN KEY ke products)
@@ -314,7 +355,7 @@ curl -X DELETE http://localhost:8080/products/1
 
 ---
 
-### Contoh Penggunaan (Session 3 - Search, Transaction, Report) ⭐ NEW
+### Contoh Penggunaan (Search, Transaction, Report)
 
 **Search Produk by Name:**
 ```bash

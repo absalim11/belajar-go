@@ -19,7 +19,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - belajar-go-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: belajar-go-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@belajar-go.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - belajar-go-network
 
 volumes:
   postgres_data:
     driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  belajar-go-network:
+    driver: bridge
